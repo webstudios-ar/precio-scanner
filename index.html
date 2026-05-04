@@ -7,11 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;700;900&display=swap');
-:root {
-  --green:#00ff88;--green-dim:#00cc66;--bg:#0a0e0d;
-  --surface:#111815;--border:#1e2e25;--text:#d4ede2;
-  --muted:#4a6b58;--red:#ff4466;--amber:#ffcc00;
-}
+:root{--green:#00ff88;--green-dim:#00cc66;--bg:#0a0e0d;--surface:#111815;--border:#1e2e25;--text:#d4ede2;--muted:#4a6b58;--red:#ff4466;--amber:#ffcc00}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;min-height:100dvh;display:flex;flex-direction:column;overflow-x:hidden}
 header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:10}
@@ -19,16 +15,28 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 .logo span{color:var(--muted)}
 .badge{font-family:'Share Tech Mono',monospace;font-size:11px;background:var(--green);color:var(--bg);padding:3px 8px;border-radius:2px;letter-spacing:1px}
 
-/* PREVIEW FOTO */
-.preview-wrap{width:100%;background:#050807;flex-shrink:0;display:flex;align-items:center;justify-content:center;min-height:200px;position:relative;overflow:hidden}
-.preview-wrap img{width:100%;max-height:280px;object-fit:contain;display:block}
-.preview-placeholder{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:13px;padding:40px}
-.preview-placeholder .icon{font-size:48px}
+/* PREVIEW */
+.preview-wrap{width:100%;background:#050807;flex-shrink:0;display:flex;align-items:center;justify-content:center;min-height:180px;overflow:hidden}
+.preview-wrap img{width:100%;max-height:260px;object-fit:contain;display:block}
+.preview-placeholder{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:12px;padding:30px;text-align:center}
+.preview-placeholder .icon{font-size:44px}
 
-/* BOTONES */
-.btn-section{display:flex;gap:10px;padding:14px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
-.btn-photo{flex:2;height:56px;background:var(--green);border:none;border-radius:4px;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:2px;color:var(--bg);cursor:pointer;transition:all .15s;text-transform:uppercase}
-.btn-photo:active{transform:scale(.97);background:var(--green-dim)}
+/* BOTON FOTO - el input file ES el botón */
+.btn-section{padding:14px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+.btn-photo-label{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;height:56px;
+  background:var(--green);border:none;border-radius:4px;
+  font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:2px;
+  color:var(--bg);cursor:pointer;
+  text-transform:uppercase;
+  -webkit-user-select:none;user-select:none;
+}
+.btn-photo-label:active{background:var(--green-dim)}
+/* El input file queda dentro del label — clic en el label lo activa en iOS/Android */
+.btn-photo-label input[type=file]{
+  position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0
+}
 
 /* MANUAL */
 .manual-section{padding:16px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
@@ -72,7 +80,6 @@ header{display:flex;align-items:center;justify-content:space-between;padding:14p
 .history-item .psych{color:var(--amber);font-size:11px}
 .empty-state{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);text-align:center;padding:20px;opacity:.5}
 canvas{display:none}
-input[type=file]{display:none}
 </style>
 </head>
 <body>
@@ -81,22 +88,22 @@ input[type=file]{display:none}
   <div class="badge">+45%</div>
 </header>
 
-<!-- PREVIEW -->
 <div class="preview-wrap" id="previewWrap">
   <div class="preview-placeholder" id="placeholder">
     <div class="icon">📷</div>
-    <span>TOCÁ "SACAR FOTO" Y APUNTÁ A LA PISTOLA</span>
+    <span>TOCÁ EL BOTÓN Y SACÁ FOTO A LA PISTOLA</span>
   </div>
   <img id="previewImg" style="display:none" alt="preview"/>
 </div>
 
-<!-- BOTÓN FOTO + FILE INPUT NATIVO -->
-<input type="file" accept="image/*" capture="environment" id="fileInput"/>
+<!-- LABEL con el input file adentro — funciona en iOS/Android sin js.click() -->
 <div class="btn-section">
-  <button class="btn-photo" id="btnPhoto">📷 SACAR FOTO</button>
+  <label class="btn-photo-label">
+    📷 SACAR FOTO
+    <input type="file" accept="image/*" capture="environment" id="fileInput"/>
+  </label>
 </div>
 
-<!-- MANUAL -->
 <div class="manual-section">
   <span class="manual-label">// O INGRESÁ EL PRECIO MANUAL</span>
   <div class="manual-row">
@@ -105,13 +112,11 @@ input[type=file]{display:none}
   </div>
 </div>
 
-<!-- STATUS -->
 <div class="status-bar" id="statusBar">
   <div class="status-dot" id="statusDot"></div>
   <span id="statusText">Listo — sacá una foto a la pistola de precios</span>
 </div>
 
-<!-- RESULT -->
 <div class="result-section">
   <div class="result-card" id="cardMain">
     <span class="card-label">// PRECIO DE VENTA SUGERIDO</span>
@@ -119,8 +124,8 @@ input[type=file]{display:none}
     <span class="card-sub" id="subMain">Sacá una foto o ingresá el costo</span>
   </div>
   <div class="result-row">
-    <div class="result-card" id="cardCost"><span class="card-label">// COSTO</span><span class="card-value" id="valCost">—</span></div>
-    <div class="result-card" id="cardMargin"><span class="card-label">// GANANCIA</span><span class="card-value" id="valMargin">—</span></div>
+    <div class="result-card"><span class="card-label">// COSTO</span><span class="card-value" id="valCost">—</span></div>
+    <div class="result-card"><span class="card-label">// GANANCIA</span><span class="card-value" id="valMargin">—</span></div>
   </div>
   <div class="result-card" id="cardPsych">
     <span class="card-label">// PRECIO PSICOLÓGICO (.99)</span>
@@ -129,17 +134,14 @@ input[type=file]{display:none}
   </div>
 </div>
 
-<!-- HISTORY -->
 <div class="history-section">
   <div class="history-label"><span>// HISTORIAL</span><button class="history-clear" id="btnClear">limpiar</button></div>
   <div class="history-list" id="historyList"><div class="empty-state">Sin escaneos todavía</div></div>
 </div>
-
 <canvas id="canvas"></canvas>
 
 <script>
 const fileInput   = document.getElementById('fileInput');
-const btnPhoto    = document.getElementById('btnPhoto');
 const previewImg  = document.getElementById('previewImg');
 const placeholder = document.getElementById('placeholder');
 const manualInput = document.getElementById('manualInput');
@@ -149,73 +151,57 @@ const statusDot   = document.getElementById('statusDot');
 const statusText  = document.getElementById('statusText');
 const historyList = document.getElementById('historyList');
 const canvas      = document.getElementById('canvas');
-let history = [];
-let processing = false;
+let hist = [], processing = false;
 
-// Abrir cámara nativa
-btnPhoto.addEventListener('click', () => fileInput.click());
-
-// Cuando se saca/elige la foto
 fileInput.addEventListener('change', async () => {
   const file = fileInput.files[0];
   if (!file || processing) return;
   processing = true;
-  btnPhoto.disabled = true;
   setStatus('Procesando foto...', 'active');
 
-  // Mostrar preview
   const url = URL.createObjectURL(file);
   previewImg.src = url;
   previewImg.style.display = 'block';
   placeholder.style.display = 'none';
 
-  // Dibujar en canvas a resolución completa
   const img = new Image();
   img.onload = async () => {
-    canvas.width  = img.naturalWidth;
+    canvas.width = img.naturalWidth;
     canvas.height = img.naturalHeight;
     const ctx = canvas.getContext('2d');
 
-    // Pasada 1: alto contraste normal
     ctx.filter = 'contrast(2.5) brightness(1.2) saturate(0)';
     ctx.drawImage(img, 0, 0);
-    const dataUrl1 = canvas.toDataURL('image/jpeg', 0.95);
+    const d1 = canvas.toDataURL('image/jpeg', 0.95);
 
-    // Pasada 2: invertida (texto blanco en pantalla oscura de pistola)
     ctx.filter = 'invert(1) contrast(2.5) brightness(1.1) saturate(0)';
     ctx.drawImage(img, 0, 0);
-    const dataUrl2 = canvas.toDataURL('image/jpeg', 0.95);
+    const d2 = canvas.toDataURL('image/jpeg', 0.95);
 
     let text = '';
     try {
-      setStatus('OCR pasada 1...', 'active');
-      const r1 = await Tesseract.recognize(dataUrl1, 'eng', {
-        logger: m => { if (m.status === 'recognizing text') setStatus('OCR 1: ' + Math.round(m.progress*100) + '%', 'active'); }
+      const r1 = await Tesseract.recognize(d1, 'eng', {
+        logger: m => { if (m.status==='recognizing text') setStatus('OCR 1: '+Math.round(m.progress*100)+'%','active'); }
       });
       text += ' ' + r1.data.text;
     } catch(e){}
-
     try {
-      setStatus('OCR pasada 2...', 'active');
-      const r2 = await Tesseract.recognize(dataUrl2, 'eng', {
-        logger: m => { if (m.status === 'recognizing text') setStatus('OCR 2: ' + Math.round(m.progress*100) + '%', 'active'); }
+      const r2 = await Tesseract.recognize(d2, 'eng', {
+        logger: m => { if (m.status==='recognizing text') setStatus('OCR 2: '+Math.round(m.progress*100)+'%','active'); }
       });
       text += ' ' + r2.data.text;
     } catch(e){}
 
-    setStatus('Texto: "' + text.trim().substring(0,60) + '"', 'idle');
+    setStatus('Texto: "'+text.trim().substring(0,60)+'"','idle');
 
-    // Extraer precios: $1,44 / $1.44 / 1,44 / 1.44
-    const matches = [...text.matchAll(/$?s*(d{1,4}[.,]d{1,2})/g)];
-    const prices = matches
-      .map(m => parseFloat(m[1].replace(',', '.')))
-      .filter(p => !isNaN(p) && p >= 0.05 && p <= 999);
+    const ms = [...text.matchAll(/$?s*(d{1,4}[.,]d{1,2})/g)];
+    const ps = ms.map(m=>parseFloat(m[1].replace(',','.'))).filter(p=>!isNaN(p)&&p>=0.05&&p<=999);
 
-    if (prices.length > 0) {
-      const cost = Math.min(...prices);
-      const all = prices.map(p => '$' + p.toFixed(2)).join(' | ');
-      setStatus('Detectados: ' + all + ' → costo: $' + cost.toFixed(2), 'active');
-      manualInput.value = cost.toFixed(2).replace('.', ',');
+    if (ps.length > 0) {
+      const cost = Math.min(...ps);
+      const all = ps.map(p=>'$'+p.toFixed(2)).join(' | ');
+      setStatus('Detectados: '+all+' → costo: $'+cost.toFixed(2), 'active');
+      manualInput.value = cost.toFixed(2).replace('.',',');
       showResult(cost, true);
     } else {
       setStatus('No se detectó precio. Ingresá manualmente.', 'error');
@@ -223,8 +209,6 @@ fileInput.addEventListener('change', async () => {
 
     URL.revokeObjectURL(url);
     processing = false;
-    btnPhoto.disabled = false;
-    // Reset para poder sacar otra foto del mismo producto
     fileInput.value = '';
   };
   img.src = url;
@@ -233,71 +217,42 @@ fileInput.addEventListener('change', async () => {
 function setStatus(msg, type='idle') {
   statusText.textContent = msg;
   statusDot.className = 'status-dot';
-  if (type === 'active') statusDot.classList.add('active');
-  if (type === 'error')  statusDot.classList.add('error');
+  if (type==='active') statusDot.classList.add('active');
+  if (type==='error')  statusDot.classList.add('error');
 }
 
 function showResult(cost, fromPhoto=false) {
-  if (isNaN(cost) || cost <= 0) return;
-  const sale  = cost * 1.45;
-  const gain  = sale - cost;
-  const psych = Math.floor(sale) + 0.99;
-  document.getElementById('valMain').textContent  = '$' + sale.toFixed(2);
-  document.getElementById('valMain').className    = 'card-value green';
-  document.getElementById('subMain').textContent  = fromPhoto ? 'Detectado por foto · 45% margen' : 'Ingreso manual · 45% margen';
-  document.getElementById('cardMain').className   = 'result-card highlight';
-  document.getElementById('valCost').textContent  = '$' + cost.toFixed(2);
-  document.getElementById('valMargin').textContent= '$' + gain.toFixed(2);
-  document.getElementById('valPsych').textContent = '$' + psych.toFixed(2);
-  document.getElementById('subPsych').textContent = psych > sale
-    ? '+$' + (psych-sale).toFixed(2) + ' vs. directo'
-    : '-$' + (sale-psych).toFixed(2) + ' vs. directo';
-  document.getElementById('cardPsych').className  = 'result-card highlight-amber';
-  history.unshift({cost, sale, psych});
-  if (history.length > 10) history.pop();
-  renderHistory();
+  if (isNaN(cost)||cost<=0) return;
+  const sale=cost*1.45, gain=sale-cost, psych=Math.floor(sale)+0.99;
+  document.getElementById('valMain').textContent='$'+sale.toFixed(2);
+  document.getElementById('valMain').className='card-value green';
+  document.getElementById('subMain').textContent=fromPhoto?'Detectado por foto · 45% margen':'Ingreso manual · 45% margen';
+  document.getElementById('cardMain').className='result-card highlight';
+  document.getElementById('valCost').textContent='$'+cost.toFixed(2);
+  document.getElementById('valMargin').textContent='$'+gain.toFixed(2);
+  document.getElementById('valPsych').textContent='$'+psych.toFixed(2);
+  document.getElementById('subPsych').textContent=psych>sale?'+$'+(psych-sale).toFixed(2)+' vs. directo':'-$'+(sale-psych).toFixed(2)+' vs. directo';
+  document.getElementById('cardPsych').className='result-card highlight-amber';
+  hist.unshift({cost,sale,psych});
+  if (hist.length>10) hist.pop();
+  renderHist();
 }
 
-function renderHistory() {
-  if (!history.length) { historyList.innerHTML = '<div class="empty-state">Sin escaneos todavía</div>'; return; }
-  historyList.innerHTML = history.map(h =>
-    '<div class="history-item"><span class="cost">$' + h.cost.toFixed(2) +
-    '</span><span class="arrow">→</span><span class="sale">$' + h.sale.toFixed(2) +
-    '</span><span class="psych">($' + h.psych.toFixed(2) + ')</span></div>'
-  ).join('');
+function renderHist() {
+  if (!hist.length){historyList.innerHTML='<div class="empty-state">Sin escaneos todavía</div>';return;}
+  historyList.innerHTML=hist.map(h=>'<div class="history-item"><span class="cost">$'+h.cost.toFixed(2)+'</span><span class="arrow">→</span><span class="sale">$'+h.sale.toFixed(2)+'</span><span class="psych">($'+h.psych.toFixed(2)+')</span></div>').join('');
 }
 
-// ---- INGRESO MANUAL ----
-// Cálculo en tiempo real mientras escribe
+// MANUAL: tiempo real
 manualInput.addEventListener('input', () => {
-  const val = parseFloat(manualInput.value.replace(',','.').trim());
-  if (!isNaN(val) && val > 0) {
-    showResult(val, false);
-    setStatus('Calculado: $' + val.toFixed(2) + ' + 45%', 'active');
-  }
+  const v=parseFloat(manualInput.value.replace(',','.').trim());
+  if (!isNaN(v)&&v>0){showResult(v,false);setStatus('$'+v.toFixed(2)+' + 45%','active');}
 });
-
-// Al clickear/tocar: si hay algo escrito lo selecciona todo
-// (NO borramos en focus — genera el problema del cursor)
-manualInput.addEventListener('click', function() {
-  if (this.value.trim() !== '') this.select();
-});
-manualInput.addEventListener('touchend', function(e) {
-  if (this.value.trim() !== '') {
-    e.preventDefault();
-    this.select();
-  }
-});
-
-btnCalc.addEventListener('click', () => {
-  const val = parseFloat(manualInput.value.replace(',','.').trim());
-  if (!isNaN(val) && val > 0) {
-    showResult(val, false);
-    setStatus('Calculado: $' + val.toFixed(2) + ' + 45%', 'active');
-  }
-});
-
-btnClear.addEventListener('click', () => { history = []; renderHistory(); });
+// Al tocar: selecciona todo para reemplazar fácil
+manualInput.addEventListener('click', function(){if(this.value.trim()!=='')this.select();});
+manualInput.addEventListener('touchend', function(e){if(this.value.trim()!==''){e.preventDefault();this.select();}});
+btnCalc.addEventListener('click',()=>{const v=parseFloat(manualInput.value.replace(',','.').trim());if(!isNaN(v)&&v>0){showResult(v,false);setStatus('$'+v.toFixed(2)+' + 45%','active');}});
+btnClear.addEventListener('click',()=>{hist=[];renderHist();});
 </script>
 </body>
 </html>
