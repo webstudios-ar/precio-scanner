@@ -78,6 +78,7 @@
     display: block;
   }
 
+  /* Scanner overlay */
   .scan-overlay {
     position: absolute;
     inset: 0;
@@ -89,8 +90,8 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 80%;
-    height: 60%;
+    width: 70%;
+    height: 40%;
     border: none;
   }
   .scan-frame::before, .scan-frame::after,
@@ -112,17 +113,17 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 80%;
+    width: 70%;
     height: 2px;
     background: linear-gradient(90deg, transparent, var(--green), transparent);
     animation: scanMove 2s ease-in-out infinite;
     box-shadow: 0 0 8px var(--green);
   }
   @keyframes scanMove {
-    0% { margin-top: -30%; opacity: 0; }
+    0% { margin-top: -20%; opacity: 0; }
     10% { opacity: 1; }
     90% { opacity: 1; }
-    100% { margin-top: 30%; opacity: 0; }
+    100% { margin-top: 20%; opacity: 0; }
   }
 
   .cam-hint {
@@ -137,6 +138,7 @@
     white-space: nowrap;
   }
 
+  /* No camera fallback */
   .no-cam {
     display: none;
     flex-direction: column;
@@ -150,6 +152,7 @@
   }
   .no-cam .icon { font-size: 36px; }
 
+  /* CAPTURE BUTTON */
   .capture-btn {
     display: flex;
     justify-content: center;
@@ -177,6 +180,7 @@
   .btn-capture:active { transform: scale(0.97); background: var(--green-dim); }
   .btn-capture:disabled { background: var(--border); color: var(--muted); cursor: default; }
 
+  /* MANUAL INPUT */
   .manual-section {
     padding: 16px 20px;
     background: var(--surface);
@@ -229,10 +233,11 @@
   }
   .btn-calc:active { background: var(--green); color: var(--bg); }
 
+  /* STATUS */
   .status-bar {
     padding: 10px 20px;
     font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     min-height: 36px;
     display: flex;
@@ -249,8 +254,9 @@
   }
   .status-dot.active { background: var(--green); }
   .status-dot.error { background: var(--red); animation: none; }
-  @keyframes pulse { 0%internal-calroll-000a:,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
+  /* RESULT */
   .result-section {
     flex: 1;
     padding: 20px;
@@ -300,6 +306,16 @@
   }
   .result-row .result-card .card-value { font-size: 28px; }
 
+  /* OCR PREVIEW */
+  #canvasPreview {
+    display: none;
+    width: 100%;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    margin-top: 8px;
+  }
+
+  /* HISTORY */
   .history-section {
     padding: 0 20px 20px;
   }
@@ -362,6 +378,7 @@
   <div class="badge">+45%</div>
 </header>
 
+<!-- CAMERA -->
 <div class="cam-wrap" id="camWrap">
   <video id="video" autoplay playsinline muted></video>
   <div class="no-cam" id="noCam">
@@ -380,11 +397,14 @@
 </div>
 
 <canvas id="canvas"></canvas>
+<canvas id="canvasPreview"></canvas>
 
+<!-- CAPTURE -->
 <div class="capture-btn">
   <button class="btn-capture" id="btnCapture" disabled>ESCANEAR</button>
 </div>
 
+<!-- MANUAL -->
 <div class="manual-section">
   <span class="manual-label">// INGRESO MANUAL</span>
   <div class="manual-row">
@@ -393,11 +413,13 @@
   </div>
 </div>
 
+<!-- STATUS -->
 <div class="status-bar" id="statusBar">
   <div class="status-dot" id="statusDot"></div>
   <span id="statusText">Iniciando cÃ¡mara...</span>
 </div>
 
+<!-- RESULT -->
 <div class="result-section" id="resultSection">
 
   <div class="result-card" id="cardMain">
@@ -422,8 +444,10 @@
     <span class="card-value amber" id="valPsych">â</span>
     <span class="card-sub" id="subPsych">Redondeado para mejor percepciÃ³n</span>
   </div>
+
 </div>
 
+<!-- HISTORY -->
 <div class="history-section">
   <div class="history-label">
     <span>// HISTORIAL</span>
@@ -435,150 +459,192 @@
 </div>
 
 <script>
-const video = document.getElementById('video');
-const canvas = document.getElementById('canvas');
-const btnCapture = document.getElementById('btnCapture');
-const btnCalc = document.getElementById('btnCalc');
-const btnClear = document.getElementById('btnClear');
-const manualInput = document.getElementById('manualInput');
-const statusDot = document.getElementById('statusDot');
-const statusText = document.getElementById('statusText');
-const historyList = document.getElementById('historyList');
-const noCam = document.getElementById('noCam');
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  const btnCapture = document.getElementById('btnCapture');
+  const btnCalc = document.getElementById('btnCalc');
+  const btnClear = document.getElementById('btnClear');
+  const manualInput = document.getElementById('manualInput');
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const historyList = document.getElementById('historyList');
+  const noCam = document.getElementById('noCam');
 
-let history = [];
-let isProcessing = false;
+  let history = [];
+  let isProcessing = false;
 
-async function initCamera() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-    });
-    video.srcObject = stream;
-    video.onloadedmetadata = () => {
-      setStatus('Listo - apuntÃ¡ al PRECIO DE MERCADO', 'active');
-      btnCapture.disabled = false;
-    };
-  } catch (e) {
-    noCam.style.display = 'flex';
-    video.style.display = 'none';
-    setStatus('CÃ¡mara no disponible â usÃ¡ ingreso manual', 'error');
-    btnCapture.disabled = true;
-  }
-}
-
-function setStatus(msg, type = 'idle') {
-  statusText.textContent = msg;
-  statusDot.className = 'status-dot';
-  if (type === 'active') statusDot.classList.add('active');
-  if (type === 'error') statusDot.classList.add('error');
-}
-
-function calcPrice(cost) {
-  const sale = cost * 1.45;
-  const gain = sale - cost;
-  const psych = Math.floor(sale) + 0.99;
-  return { cost, sale, gain, psych };
-}
-
-function showResult(cost, fromOCR = false) {
-  if (isNaN(cost) || cost <= 0) return;
-  const { sale, gain, psych } = calcPrice(cost);
-  document.getElementById('valMain').textContent = '$' + sale.toFixed(2);
-  document.getElementById('valMain').className = 'card-value green';
-  document.getElementById('subMain').textContent = fromOCR ? 'Detectado por cÃ¡mara | 45% margen' : 'Ingreso manual | 45% margen';
-  document.getElementById('cardMain').className = 'result-card highlight';
-  document.getElementById('valCost').textContent = '$' + cost.toFixed(2);
-  document.getElementById('valMargin').textContent = '$' + gain.toFixed(2);
-  document.getElementById('valPsych').textContent = '$' + psych.toFixed(2);
-  document.getElementById('cardPsych').className = 'result-card highlight-amber';
-  history.unshift({ cost, sale, psych });
-  if (history.length > 10) history.pop();
-  renderHistory();
-}
-
-function renderHistory() {
-  if (!history.length) {
-    historyList.innerHTML = '<div class="empty-state">Sin escaneos todavÃ­a</div>';
-    return;
-  }
-  historyList.innerHTML = history.map(h =>
-    '<div class="history-item"><span class="cost">$' + h.cost.toFixed(2) +
-    '</span><span class="arrow">â</span><span class="sale">$' + h.sale.toFixed(2) +
-    '</span><span class="psych">($' + h.psych.toFixed(2) + ')</span></div>'
-  ).join('');
-}
-
-btnCapture.addEventListener('click', async () => {
-  if (isProcessing) return;
-  isProcessing = true;
-  btnCapture.disabled = true;
-  setStatus('Capturando...', 'active');
-
-  const ctx = canvas.getContext('2d');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  ctx.drawImage(video, 0, 0);
-
-  // crop amplio - mas del 60% de la imagen
-  const cx = canvas.width  * 0.05;
-  const cy = canvas.height * 0.15;
-  const cw = canvas.width  * 0.90;
-  const ch = canvas.height * 0.70;
-
-  const sc = 3.0;
-  const cc = document.createElement('canvas');
-  cc.width = cw * sc; cc.height = ch * sc;
-  const gc = cc.getContext('2d');
-  gc.filter = 'contrast(2.5) brightness(1.2) saturate(0) sharpen(5)';
-  gc.drawImage(canvas, cx, cy, cw, ch, 0, 0, cw * sc, ch * sc);
-
-  try {
-    setStatus('Analizando...', 'active');
-    const result = await Tesseract.recognize(cc, 'eng', {
-      logger: m => {
-        if (m.status === 'recognizing text')
-          setStatus('OCR: ' + Math.round(m.progress * 100) + '%', 'active');
-      }
-    });
-
-    const txt = result.data.text;
-    setStatus('Texto: "' + txt.trim().substring(0, 60) + '"...', 'idle');
-
-    // Buscar TODOS los numeros tipo precio
-    const ms = [...txt.matchAll(/\$?\s*(\d{1,4}[.,]\d{1,2})/g)];
-    const ps = ms.map(m => parseFloat(m[1].replace(',', '.')))
-                 .filter(p => !isNaN(p) && p > 0 && p < 9999);
-
-    if (ps.length > 0) {
-      // Precio de mercado = siempre el MAS CHICO
-      const cost = Math.min(...ps);
-      const all = ps.map(p => '$' + p.toFixed(2)).join(' | ');
-      setStatus('Detectados ' + all + ' â costo: $' + cost.toFixed(2), 'active');
-      manualInput.value = cost.toFixed(2).replace('.', ',');
-      showResult(cost, true);
-    } else {
-      setStatus('No se detectÃ³ precio. IngresÃ¡ manualmente.', 'error');
+  // CAMERA INIT
+  async function initCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      video.srcObject = stream;
+      video.onloadedmetadata = () => {
+        setStatus('Listo para escanear', 'active');
+        btnCapture.disabled = false;
+      };
+    } catch (e) {
+      noCam.style.display = 'flex';
+      video.style.display = 'none';
+      setStatus('CÃ¡mara no disponible â usÃ¡ ingreso manual', 'error');
+      btnCapture.disabled = true;
     }
-  } catch (e) {
-    setStatus('Error OCR.  IngresÃ¡ manualmente.', 'error');
   }
 
-  isProcessing = false;
-  btnCapture.disabled = false;
-});
+  function setStatus(msg, type = 'idle') {
+    statusText.textContent = msg;
+    statusDot.className = 'status-dot';
+    if (type === 'active') statusDot.classList.add('active');
+    if (type === 'error') statusDot.classList.add('error');
+  }
 
-function calcManual() {
-  const val = parseFloat(manualInput.value.replace(',', '.').trim());
-  if (isNaN(val) || val <= 0) { setStatus('IngresÃ¡ un precio valido', 'error'); return; }
-  showResult(val, false);
-  setStatus('Calculado: $' + val.toFixed(2) + ' + 45%', 'active');
-}
-btnCalc.addEventListener('click', calcManual);
-manualInput.addEventListener('keydown', e => { if (e.key === 'Enter') calcManual(); });
-btnClear.addEventListener('click', () => { history = []; renderHistory(); });
+  // PRICE CALCULATION
+  function calcPrice(cost) {
+    const sale = cost * 1.45;
+    const gain = sale - cost;
 
-initCamera();
+    // Psychological price
+    const floor = Math.floor(sale);
+    const psych = floor + 0.99;
+
+    return { cost, sale, gain, psych };
+  }
+
+  function psychLabel(sale, psych) {
+    if (Math.abs(psych - sale) < 0.01) return 'Precio ya redondeado';
+    return psych > sale ? `+$${(psych - sale).toFixed(2)} vs. directo` : `-$${(sale - psych).toFixed(2)} vs. directo`;
+  }
+
+  function showResult(cost, fromOCR = false) {
+    if (isNaN(cost) || cost <= 0) return;
+    const { sale, gain, psych } = calcPrice(cost);
+
+    document.getElementById('valMain').textContent = `$${sale.toFixed(2)}`;
+    document.getElementById('valMain').className = 'card-value green';
+    document.getElementById('subMain').textContent = fromOCR ? 'Detectado por cÃ¡mara Â· 45% de margen' : 'Ingreso manual Â· 45% de margen';
+    document.getElementById('cardMain').className = 'result-card highlight';
+
+    document.getElementById('valCost').textContent = `$${cost.toFixed(2)}`;
+    document.getElementById('valMargin').textContent = `$${gain.toFixed(2)}`;
+
+    document.getElementById('valPsych').textContent = `$${psych.toFixed(2)}`;
+    document.getElementById('subPsych').textContent = psychLabel(sale, psych);
+    document.getElementById('cardPsych').className = 'result-card highlight-amber';
+
+    addHistory(cost, sale, psych);
+  }
+
+  function addHistory(cost, sale, psych) {
+    history.unshift({ cost, sale, psych, ts: Date.now() });
+    if (history.length > 10) history.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    if (history.length === 0) {
+      historyList.innerHTML = '<div class="empty-state">Sin escaneos todavÃ­a</div>';
+      return;
+    }
+    historyList.innerHTML = history.map(h => `
+      <div class="history-item">
+        <span class="cost">$${h.cost.toFixed(2)}</span>
+        <span class="arrow">â</span>
+        <span class="sale">$${h.sale.toFixed(2)}</span>
+        <span class="psych">($${h.psych.toFixed(2)})</span>
+      </div>
+    `).join('');
+  }
+
+  // OCR CAPTURE
+  btnCapture.addEventListener('click', async () => {
+    if (isProcessing) return;
+    isProcessing = true;
+    btnCapture.disabled = true;
+    setStatus('Capturando...', 'active');
+
+    const ctx = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+
+    const cropX = canvas.width * 0.10;
+    const cropY = canvas.height * 0.20;
+    const cropW = canvas.width * 0.80;
+    const cropH = canvas.height * 0.60;
+
+    // Scale 2.5x for better OCR on small text
+    const scale = 2.5;
+    const cropCanvas = document.createElement('canvas');
+    cropCanvas.width = cropW * scale;
+    cropCanvas.height = cropH * scale;
+    const cropCtx = cropCanvas.getContext('2d');
+    cropCtx.filter = 'contrast(2.2) brightness(1.3) saturate(0)';
+    cropCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW * scale, cropH * scale);
+
+    try {
+      setStatus('Analizando...', 'active');
+      const result = await Tesseract.recognize(cropCanvas, 'eng', {
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            setStatus('OCR: ' + Math.round(m.progress * 100) + '%', 'active');
+          }
+        }
+      });
+
+      const text = result.data.text;
+      setStatus('Texto: "' + text.trim().substring(0, 50) + '"', 'idle');
+
+      // Detectar TODOS los precios (formato $1,44 / $1.44 / 1,44)
+      const allMatches = [...text.matchAll(/\$?\s*(\d{1,4}[.,]\d{1,2})/g)];
+      const prices = allMatches
+        .map(m => parseFloat(m[1].replace(',', '.')))
+        .filter(p => !isNaN(p) && p > 0 && p < 9999);
+
+      if (prices.length > 0) {
+        // La pistola muestra Precio de mercado (costo) y Tu precio (venta).
+        // El costo es SIEMPRE el mas chico de los dos.
+        const cost = Math.min(...prices);
+        const allStr = prices.map(p => '$' + p.toFixed(2)).join(' Â· ');
+        setStatus('Detectados: ' + allStr + ' â costo: $' + cost.toFixed(2) + ' â', 'active');
+        manualInput.value = cost.toFixed(2).replace('.', ',');
+        showResult(cost, true);
+      } else {
+        setStatus('No se detectÃ³ precio. IngresÃ¡ manualmente.', 'error');
+      }
+    } catch (e) {
+      setStatus('Error OCR. UsÃ¡ ingreso manual.', 'error');
+    }
+
+    isProcessing = false;
+    btnCapture.disabled = false;
+  });
+
+  // MANUAL CALC
+  function calcManual() {
+    const val = parseFloat(manualInput.value.replace(",", ".").trim());
+    if (isNaN(val) || val <= 0) {
+      return;
+    }
+    showResult(val, false);
+    setStatus(`Calculado: $${val.toFixed(2)} + 45%`, 'active');
+  }
+  // Tiempo real: calcula mientras escribis
+  manualInput.addEventListener('input', calcManual);
+  // Al tocar el campo con algo escrito, lo limpia
+  manualInput.addEventListener('focus', () => {
+    if (manualInput.value.trim() !== '') manualInput.value = '';
+  });
+  btnCalc.addEventListener('click', calcManual);
+
+  // CLEAR HISTORY
+  btnClear.addEventListener('click', () => {
+    history = [];
+    renderHistory();
+  });
+
+  // INIT
+  initCamera();
 </script>
 </body>
 </html>
