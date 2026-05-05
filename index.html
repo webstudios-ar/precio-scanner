@@ -7,252 +7,303 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;700;900&display=swap');
-:root{--green:#00ff88;--green-dim:#00cc66;--bg:#0a0e0d;--surface:#111815;--border:#1e2e25;--text:#d4ede2;--muted:#4a6b58;--red:#ff4466;--amber:#ffcc00}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;min-height:100dvh;display:flex;flex-direction:column;overflow-x:hidden}
-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:10}
-.logo{font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--green);letter-spacing:2px}
-.logo span{color:var(--muted)}
-.badge{font-family:'Share Tech Mono',monospace;font-size:11px;background:var(--green);color:var(--bg);padding:3px 8px;border-radius:2px;letter-spacing:1px}
+:root {
+  --green:#00ff88; --green-dim:#00cc66; --bg:#0a0e0d;
+  --surface:#111815; --border:#1e2e25; --text:#d4ede2;
+  --muted:#4a6b58; --red:#ff4466; --amber:#ffcc00;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { background:var(--bg); color:var(--text); font-family:'Barlow Condensed',sans-serif; min-height:100dvh; display:flex; flex-direction:column; }
+
+header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px 10px; border-bottom:1px solid var(--border); background:var(--surface); position:sticky; top:0; z-index:10; }
+.logo { font-family:'Share Tech Mono',monospace; font-size:18px; color:var(--green); letter-spacing:2px; }
+.logo span { color:var(--muted); }
+.badge { font-family:'Share Tech Mono',monospace; font-size:11px; background:var(--green); color:var(--bg); padding:3px 8px; border-radius:2px; }
 
 /* PREVIEW */
-.preview-wrap{width:100%;background:#050807;flex-shrink:0;display:flex;align-items:center;justify-content:center;min-height:180px;overflow:hidden}
-.preview-wrap img{width:100%;max-height:260px;object-fit:contain;display:block}
-.preview-placeholder{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:12px;padding:30px;text-align:center}
-.preview-placeholder .icon{font-size:44px}
+.preview-wrap { width:100%; background:#050807; min-height:180px; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
+#previewImg { width:100%; max-height:260px; object-fit:contain; display:none; }
+.placeholder { display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--muted); font-family:'Share Tech Mono',monospace; font-size:12px; padding:30px; text-align:center; }
+.placeholder .icon { font-size:44px; }
 
-/* BOTON FOTO - el input file ES el botón */
-.btn-section{padding:14px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
-.btn-photo-label{
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  width:100%;height:56px;
-  background:var(--green);border:none;border-radius:4px;
-  font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:2px;
-  color:var(--bg);cursor:pointer;
-  text-transform:uppercase;
-  -webkit-user-select:none;user-select:none;
+/* BOTÃN FOTO â label envuelve el input directamente */
+.photo-wrap { padding:14px 20px; background:var(--surface); border-bottom:1px solid var(--border); }
+label.btn-foto {
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  width:100%; height:58px;
+  background:var(--green); border-radius:4px; cursor:pointer;
+  font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900;
+  letter-spacing:2px; color:var(--bg); text-transform:uppercase;
+  -webkit-user-select:none; user-select:none;
 }
-.btn-photo-label:active{background:var(--green-dim)}
-/* El input file queda dentro del label — clic en el label lo activa en iOS/Android */
-.btn-photo-label input[type=file]{
-  position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0
+label.btn-foto:active { background:var(--green-dim); }
+/* El input va dentro del label â iOS/Android lo abren al tocar el label */
+label.btn-foto input[type=file] {
+  position:absolute; width:1px; height:1px; opacity:0;
+  overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
 }
 
 /* MANUAL */
-.manual-section{padding:16px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
-.manual-label{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:8px;display:block}
-.manual-row{display:flex;gap:10px;align-items:center}
-.manual-input{flex:1;height:56px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--green);font-family:'Share Tech Mono',monospace;font-size:28px;padding:0 14px;outline:none;transition:border-color .2s;-webkit-appearance:none;letter-spacing:2px}
-.manual-input:focus{border-color:var(--green)}
-.manual-input::placeholder{color:var(--muted);font-size:16px}
-.btn-calc{width:80px;height:56px;background:transparent;border:1px solid var(--green);border-radius:4px;color:var(--green);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .15s;text-transform:uppercase}
-.btn-calc:active{background:var(--green);color:var(--bg)}
+.manual-wrap { padding:16px 20px; background:var(--surface); border-bottom:1px solid var(--border); }
+.lbl { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:2px; margin-bottom:8px; display:block; }
+.row { display:flex; gap:10px; align-items:center; }
+input.num {
+  flex:1; height:58px; background:var(--bg); border:1px solid var(--border);
+  border-radius:4px; color:var(--green); font-family:'Share Tech Mono',monospace;
+  font-size:30px; padding:0 14px; outline:none; -webkit-appearance:none;
+  letter-spacing:2px;
+}
+input.num:focus { border-color:var(--green); }
+input.num::placeholder { color:var(--muted); font-size:16px; }
 
 /* STATUS */
-.status-bar{padding:10px 20px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);min-height:36px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
-.status-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;animation:pulse 1.5s ease-in-out infinite}
-.status-dot.active{background:var(--green)}
-.status-dot.error{background:var(--red);animation:none}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.status { padding:10px 20px; font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--muted); min-height:36px; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); }
+.dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; animation:blink 1.5s ease-in-out infinite; }
+.dot.on { background:var(--green); }
+.dot.err { background:var(--red); animation:none; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-/* RESULTS */
-.result-section{flex:1;padding:20px;display:flex;flex-direction:column;gap:14px}
-.result-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;transition:border-color .3s}
-.result-card.highlight{border-color:var(--green)}
-.result-card.highlight-amber{border-color:var(--amber)}
-.card-label{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
-.card-value{font-family:'Share Tech Mono',monospace;font-size:42px;line-height:1;color:var(--text)}
-.card-value.green{color:var(--green)}
-.card-value.amber{color:var(--amber)}
-.card-sub{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted)}
-.result-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.result-row .result-card .card-value{font-size:28px}
+/* CARDS */
+.cards { flex:1; padding:20px; display:flex; flex-direction:column; gap:14px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:18px 20px; display:flex; flex-direction:column; gap:6px; }
+.card.ok { border-color:var(--green); }
+.card.am { border-color:var(--amber); }
+.clbl { font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
+.cval { font-family:'Share Tech Mono',monospace; font-size:42px; line-height:1; color:var(--text); }
+.cval.g { color:var(--green); }
+.cval.a { color:var(--amber); }
+.csub { font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--muted); }
+.pair { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.pair .cval { font-size:28px; }
 
-/* HISTORY */
-.history-section{padding:0 20px 20px}
-.history-label{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
-.history-clear{background:none;border:none;color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:11px;cursor:pointer;text-decoration:underline}
-.history-list{display:flex;flex-direction:column;gap:6px}
-.history-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:13px}
-.history-item .cost{color:var(--muted)}
-.history-item .arrow{color:var(--border)}
-.history-item .sale{color:var(--green)}
-.history-item .psych{color:var(--amber);font-size:11px}
-.empty-state{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);text-align:center;padding:20px;opacity:.5}
-canvas{display:none}
+/* HISTORIAL */
+.hist-wrap { padding:0 20px 30px; }
+.hist-head { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:2px; margin-bottom:10px; display:flex; justify-content:space-between; }
+.hist-head button { background:none; border:none; color:var(--muted); font-family:'Share Tech Mono',monospace; font-size:11px; cursor:pointer; text-decoration:underline; }
+.hist-list { display:flex; flex-direction:column; gap:6px; }
+.hist-item { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:var(--surface); border:1px solid var(--border); border-radius:4px; font-family:'Share Tech Mono',monospace; font-size:13px; }
+.hist-item .c { color:var(--muted); }
+.hist-item .ar { color:var(--border); }
+.hist-item .s { color:var(--green); }
+.hist-item .p { color:var(--amber); font-size:11px; }
+.empty { font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--muted); text-align:center; padding:20px; opacity:.5; }
+
+canvas { display:none; }
 </style>
 </head>
 <body>
+
 <header>
   <div class="logo">PRECIO<span>SCAN</span></div>
   <div class="badge">+45%</div>
 </header>
 
-<div class="preview-wrap" id="previewWrap">
-  <div class="preview-placeholder" id="placeholder">
-    <div class="icon">📷</div>
-    <span>TOCÁ EL BOTÓN Y SACÁ FOTO A LA PISTOLA</span>
+<!-- PREVIEW -->
+<div class="preview-wrap">
+  <img id="previewImg" alt="preview"/>
+  <div class="placeholder" id="ph">
+    <div class="icon">ð·</div>
+    <span>SACÃ FOTO A LA PISTOLA DE PRECIOS</span>
   </div>
-  <img id="previewImg" style="display:none" alt="preview"/>
 </div>
 
-<!-- LABEL con el input file adentro — funciona en iOS/Android sin js.click() -->
-<div class="btn-section">
-  <label class="btn-photo-label">
-    📷 SACAR FOTO
+<!-- BOTÃN FOTO â el label envuelve el input, iOS lo activa directo -->
+<div class="photo-wrap">
+  <label class="btn-foto">
+    ð· SACAR FOTO
     <input type="file" accept="image/*" capture="environment" id="fileInput"/>
   </label>
 </div>
 
-<div class="manual-section">
-  <span class="manual-label">// O INGRESÁ EL PRECIO MANUAL</span>
-  <div class="manual-row">
-    <input class="manual-input" id="manualInput" type="text" inputmode="decimal" placeholder="ej: 1,89"/>
-    <button class="btn-calc" id="btnCalc">CALC</button>
+<!-- INGRESO MANUAL -->
+<div class="manual-wrap">
+  <span class="lbl">// INGRESO MANUAL (coma o punto)</span>
+  <div class="row">
+    <input class="num" id="numInput" type="text" inputmode="decimal" placeholder="ej: 1,89"/>
   </div>
 </div>
 
-<div class="status-bar" id="statusBar">
-  <div class="status-dot" id="statusDot"></div>
-  <span id="statusText">Listo — sacá una foto a la pistola de precios</span>
+<!-- STATUS -->
+<div class="status">
+  <div class="dot" id="dot"></div>
+  <span id="msg">Listo</span>
 </div>
 
-<div class="result-section">
-  <div class="result-card" id="cardMain">
-    <span class="card-label">// PRECIO DE VENTA SUGERIDO</span>
-    <span class="card-value" id="valMain">—</span>
-    <span class="card-sub" id="subMain">Sacá una foto o ingresá el costo</span>
+<!-- RESULTADOS -->
+<div class="cards">
+  <div class="card" id="cMain">
+    <span class="clbl">// PRECIO DE VENTA SUGERIDO</span>
+    <span class="cval" id="vMain">â</span>
+    <span class="csub" id="sMain">SacÃ¡ una foto o escribÃ­ el costo</span>
   </div>
-  <div class="result-row">
-    <div class="result-card"><span class="card-label">// COSTO</span><span class="card-value" id="valCost">—</span></div>
-    <div class="result-card"><span class="card-label">// GANANCIA</span><span class="card-value" id="valMargin">—</span></div>
+  <div class="pair">
+    <div class="card"><span class="clbl">// COSTO</span><span class="cval" id="vCost">â</span></div>
+    <div class="card"><span class="clbl">// GANANCIA</span><span class="cval" id="vGain">â</span></div>
   </div>
-  <div class="result-card" id="cardPsych">
-    <span class="card-label">// PRECIO PSICOLÓGICO (.99)</span>
-    <span class="card-value amber" id="valPsych">—</span>
-    <span class="card-sub" id="subPsych">Redondeado para mejor percepción</span>
+  <div class="card" id="cPsych">
+    <span class="clbl">// PRECIO PSICOLÃGICO (.99)</span>
+    <span class="cval a" id="vPsych">â</span>
+    <span class="csub" id="sPsych">Redondeado</span>
   </div>
 </div>
 
-<div class="history-section">
-  <div class="history-label"><span>// HISTORIAL</span><button class="history-clear" id="btnClear">limpiar</button></div>
-  <div class="history-list" id="historyList"><div class="empty-state">Sin escaneos todavía</div></div>
+<!-- HISTORIAL -->
+<div class="hist-wrap">
+  <div class="hist-head">
+    <span>// HISTORIAL</span>
+    <button id="btnClear">limpiar</button>
+  </div>
+  <div class="hist-list" id="histList">
+    <div class="empty">Sin escaneos todavÃ­a</div>
+  </div>
 </div>
-<canvas id="canvas"></canvas>
+
+<canvas id="cv"></canvas>
 
 <script>
-const fileInput   = document.getElementById('fileInput');
-const previewImg  = document.getElementById('previewImg');
-const placeholder = document.getElementById('placeholder');
-const manualInput = document.getElementById('manualInput');
-const btnCalc     = document.getElementById('btnCalc');
-const btnClear    = document.getElementById('btnClear');
-const statusDot   = document.getElementById('statusDot');
-const statusText  = document.getElementById('statusText');
-const historyList = document.getElementById('historyList');
-const canvas      = document.getElementById('canvas');
-let hist = [], processing = false;
+var fileInput = document.getElementById('fileInput');
+var numInput  = document.getElementById('numInput');
+var btnClear  = document.getElementById('btnClear');
+var previewImg= document.getElementById('previewImg');
+var ph        = document.getElementById('ph');
+var dot       = document.getElementById('dot');
+var msgEl     = document.getElementById('msg');
+var histList  = document.getElementById('histList');
+var cv        = document.getElementById('cv');
+var hist      = [];
+var busy      = false;
 
-fileInput.addEventListener('change', async () => {
-  const file = fileInput.files[0];
-  if (!file || processing) return;
-  processing = true;
-  setStatus('Procesando foto...', 'active');
-
-  const url = URL.createObjectURL(file);
-  previewImg.src = url;
-  previewImg.style.display = 'block';
-  placeholder.style.display = 'none';
-
-  const img = new Image();
-  img.onload = async () => {
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
-    const ctx = canvas.getContext('2d');
-
-    ctx.filter = 'contrast(2.5) brightness(1.2) saturate(0)';
-    ctx.drawImage(img, 0, 0);
-    const d1 = canvas.toDataURL('image/jpeg', 0.95);
-
-    ctx.filter = 'invert(1) contrast(2.5) brightness(1.1) saturate(0)';
-    ctx.drawImage(img, 0, 0);
-    const d2 = canvas.toDataURL('image/jpeg', 0.95);
-
-    let text = '';
-    try {
-      const r1 = await Tesseract.recognize(d1, 'eng', {
-        logger: m => { if (m.status==='recognizing text') setStatus('OCR 1: '+Math.round(m.progress*100)+'%','active'); }
-      });
-      text += ' ' + r1.data.text;
-    } catch(e){}
-    try {
-      const r2 = await Tesseract.recognize(d2, 'eng', {
-        logger: m => { if (m.status==='recognizing text') setStatus('OCR 2: '+Math.round(m.progress*100)+'%','active'); }
-      });
-      text += ' ' + r2.data.text;
-    } catch(e){}
-
-    setStatus('Texto: "'+text.trim().substring(0,60)+'"','idle');
-
-    const ms = [...text.matchAll(/$?s*(d{1,4}[.,]d{1,2})/g)];
-    const ps = ms.map(m=>parseFloat(m[1].replace(',','.'))).filter(p=>!isNaN(p)&&p>=0.05&&p<=999);
-
-    if (ps.length > 0) {
-      const cost = Math.min(...ps);
-      const all = ps.map(p=>'$'+p.toFixed(2)).join(' | ');
-      setStatus('Detectados: '+all+' → costo: $'+cost.toFixed(2), 'active');
-      manualInput.value = cost.toFixed(2).replace('.',',');
-      showResult(cost, true);
-    } else {
-      setStatus('No se detectó precio. Ingresá manualmente.', 'error');
-    }
-
-    URL.revokeObjectURL(url);
-    processing = false;
-    fileInput.value = '';
-  };
-  img.src = url;
-});
-
-function setStatus(msg, type='idle') {
-  statusText.textContent = msg;
-  statusDot.className = 'status-dot';
-  if (type==='active') statusDot.classList.add('active');
-  if (type==='error')  statusDot.classList.add('error');
+function setMsg(txt, type) {
+  msgEl.textContent = txt;
+  dot.className = 'dot' + (type === 'on' ? ' on' : type === 'err' ? ' err' : '');
 }
 
-function showResult(cost, fromPhoto=false) {
-  if (isNaN(cost)||cost<=0) return;
-  const sale=cost*1.45, gain=sale-cost, psych=Math.floor(sale)+0.99;
-  document.getElementById('valMain').textContent='$'+sale.toFixed(2);
-  document.getElementById('valMain').className='card-value green';
-  document.getElementById('subMain').textContent=fromPhoto?'Detectado por foto · 45% margen':'Ingreso manual · 45% margen';
-  document.getElementById('cardMain').className='result-card highlight';
-  document.getElementById('valCost').textContent='$'+cost.toFixed(2);
-  document.getElementById('valMargin').textContent='$'+gain.toFixed(2);
-  document.getElementById('valPsych').textContent='$'+psych.toFixed(2);
-  document.getElementById('subPsych').textContent=psych>sale?'+$'+(psych-sale).toFixed(2)+' vs. directo':'-$'+(sale-psych).toFixed(2)+' vs. directo';
-  document.getElementById('cardPsych').className='result-card highlight-amber';
-  hist.unshift({cost,sale,psych});
-  if (hist.length>10) hist.pop();
+function showResult(cost, fromPhoto) {
+  if (isNaN(cost) || cost <= 0) return;
+  var sale  = cost * 1.45;
+  var gain  = sale - cost;
+  var psych = Math.floor(sale) + 0.99;
+
+  document.getElementById('vPsych').textContent = '$' + psych.toFixed(2);
+  document.getElementById('cPsych').className   = 'card am';
+  document.getElementById('vCost').textContent  = '$' + cost.toFixed(2);
+  document.getElementById('vGain').textContent  = '$' + gain.toFixed(2);
+  document.getElementById('vMain').textContent  = '$' + sale.toFixed(2);
+  document.getElementById('vPsych').textContent = '$' + psych.toFixed(2);
+  document.getElementById('vMain').className    = 'cval g';
+  document.getElementById('sMain').textContent  = fromPhoto ? 'Detectado por foto' : 'Ingreso manual';
+  document.getElementById('cMain').className    = 'card ok';
+
+  hist.unshift({ cost: cost, sale: sale, psych: psych });
+  if (hist.length > 10) hist.pop();
   renderHist();
 }
 
 function renderHist() {
-  if (!hist.length){historyList.innerHTML='<div class="empty-state">Sin escaneos todavía</div>';return;}
-  historyList.innerHTML=hist.map(h=>'<div class="history-item"><span class="cost">$'+h.cost.toFixed(2)+'</span><span class="arrow">→</span><span class="sale">$'+h.sale.toFixed(2)+'</span><span class="psych">($'+h.psych.toFixed(2)+')</span></div>').join('');
+  if (!hist.length) {
+    histList.innerHTML = '<div class="empty">Sin escaneos todavÃ­a</div>';
+    return;
+  }
+  histList.innerHTML = hist.map(function(h) {
+    return '<div class="hist-item">' +
+      '<span class="c">$' + h.cost.toFixed(2) + '</span>' +
+      '<span class="ar">â</span>' +
+      '<span class="s">$' + h.sale.toFixed(2) + '</span>' +
+      '<span class="p">($' + h.psych.toFixed(2) + ')</span>' +
+      '</div>';
+  }).join('');
 }
 
-// MANUAL: tiempo real
-manualInput.addEventListener('input', () => {
-  const v=parseFloat(manualInput.value.replace(',','.').trim());
-  if (!isNaN(v)&&v>0){showResult(v,false);setStatus('$'+v.toFixed(2)+' + 45%','active');}
+/* ---- FOTO ---- */
+fileInput.addEventListener('change', function() {
+  var file = this.files[0];
+  if (!file || busy) return;
+  busy = true;
+  setMsg('Cargando foto...', 'on');
+
+  var url = URL.createObjectURL(file);
+  previewImg.src = url;
+  previewImg.style.display = 'block';
+  ph.style.display = 'none';
+
+  var img = new Image();
+  img.onload = function() {
+    cv.width  = img.naturalWidth;
+    cv.height = img.naturalHeight;
+    var ctx = cv.getContext('2d');
+
+    ctx.filter = 'contrast(2.5) brightness(1.2) saturate(0)';
+    ctx.drawImage(img, 0, 0);
+    var d1 = cv.toDataURL('image/jpeg', 0.95);
+
+    ctx.filter = 'invert(1) contrast(2.5) brightness(1.1) saturate(0)';
+    ctx.drawImage(img, 0, 0);
+    var d2 = cv.toDataURL('image/jpeg', 0.95);
+
+    var combined = '';
+
+    setMsg('OCR 1/2...', 'on');
+    Tesseract.recognize(d1, 'eng', {
+      logger: function(m) {
+        if (m.status === 'recognizing text')
+          setMsg('OCR 1: ' + Math.round(m.progress * 100) + '%', 'on');
+      }
+    }).then(function(r1) {
+      combined += ' ' + r1.data.text;
+      setMsg('OCR 2/2...', 'on');
+      return Tesseract.recognize(d2, 'eng', {
+        logger: function(m) {
+          if (m.status === 'recognizing text')
+            setMsg('OCR 2: ' + Math.round(m.progress * 100) + '%', 'on');
+        }
+      });
+    }).then(function(r2) {
+      combined += ' ' + r2.data.text;
+      setMsg('Texto: "' + combined.trim().substring(0, 60) + '"', '');
+
+      var ms = combined.match(/\$?\s*(\d{1,4}[.,]\d{1,2})/g) || [];
+      var prices = ms.map(function(m) {
+        return parseFloat(m.replace(/[^0-9.,]/g, '').replace(',', '.'));
+      }).filter(function(p) { return !isNaN(p) && p >= 0.05 && p <= 999; });
+
+      if (prices.length > 0) {
+        var cost = Math.min.apply(null, prices);
+        setMsg('Detectados: ' + prices.map(function(p){return '$'+p.toFixed(2);}).join(' | ') + ' â costo: $' + cost.toFixed(2), 'on');
+        numInput.value = cost.toFixed(2).replace('.', ',');
+        showResult(cost, true);
+      } else {
+        setMsg('No se detectÃ³ precio. IngresÃ¡ manualmente.', 'err');
+      }
+
+      URL.revokeObjectURL(url);
+      busy = false;
+      fileInput.value = '';
+    }).catch(function(e) {
+      setMsg('Error OCR. IngresÃ¡ manualmente.', 'err');
+      busy = false;
+      fileInput.value = '';
+    });
+  };
+  img.src = url;
 });
-// Al tocar: selecciona todo para reemplazar fácil
-manualInput.addEventListener('click', function(){if(this.value.trim()!=='')this.select();});
-manualInput.addEventListener('touchend', function(e){if(this.value.trim()!==''){e.preventDefault();this.select();}});
-btnCalc.addEventListener('click',()=>{const v=parseFloat(manualInput.value.replace(',','.').trim());if(!isNaN(v)&&v>0){showResult(v,false);setStatus('$'+v.toFixed(2)+' + 45%','active');}});
-btnClear.addEventListener('click',()=>{hist=[];renderHist();});
+
+/* ---- MANUAL: tiempo real ---- */
+numInput.addEventListener('input', function() {
+  var v = parseFloat(this.value.replace(',', '.').trim());
+  if (!isNaN(v) && v > 0) {
+    showResult(v, false);
+    setMsg('$' + v.toFixed(2) + ' + 45%', 'on');
+  }
+});
+
+numInput.addEventListener('click', function() {
+  if (this.value.trim() !== '') this.select();
+});
+
+btnClear.addEventListener('click', function() {
+  hist = [];
+  renderHist();
+});
 </script>
 </body>
 </html>
