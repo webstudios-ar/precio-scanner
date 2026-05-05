@@ -7,303 +7,192 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;700;900&display=swap');
-:root {
-  --green:#00ff88; --green-dim:#00cc66; --bg:#0a0e0d;
-  --surface:#111815; --border:#1e2e25; --text:#d4ede2;
-  --muted:#4a6b58; --red:#ff4466; --amber:#ffcc00;
-}
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-body { background:var(--bg); color:var(--text); font-family:'Barlow Condensed',sans-serif; min-height:100dvh; display:flex; flex-direction:column; }
-
-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px 10px; border-bottom:1px solid var(--border); background:var(--surface); position:sticky; top:0; z-index:10; }
-.logo { font-family:'Share Tech Mono',monospace; font-size:18px; color:var(--green); letter-spacing:2px; }
-.logo span { color:var(--muted); }
-.badge { font-family:'Share Tech Mono',monospace; font-size:11px; background:var(--green); color:var(--bg); padding:3px 8px; border-radius:2px; }
-
-/* PREVIEW */
-.preview-wrap { width:100%; background:#050807; min-height:180px; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
-#previewImg { width:100%; max-height:260px; object-fit:contain; display:none; }
-.placeholder { display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--muted); font-family:'Share Tech Mono',monospace; font-size:12px; padding:30px; text-align:center; }
-.placeholder .icon { font-size:44px; }
-
-/* BOTÃN FOTO â label envuelve el input directamente */
-.photo-wrap { padding:14px 20px; background:var(--surface); border-bottom:1px solid var(--border); }
-label.btn-foto {
-  display:flex; align-items:center; justify-content:center; gap:8px;
-  width:100%; height:58px;
-  background:var(--green); border-radius:4px; cursor:pointer;
-  font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900;
-  letter-spacing:2px; color:var(--bg); text-transform:uppercase;
-  -webkit-user-select:none; user-select:none;
-}
-label.btn-foto:active { background:var(--green-dim); }
-/* El input va dentro del label â iOS/Android lo abren al tocar el label */
-label.btn-foto input[type=file] {
-  position:absolute; width:1px; height:1px; opacity:0;
-  overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
-}
-
-/* MANUAL */
-.manual-wrap { padding:16px 20px; background:var(--surface); border-bottom:1px solid var(--border); }
-.lbl { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:2px; margin-bottom:8px; display:block; }
-.row { display:flex; gap:10px; align-items:center; }
-input.num {
-  flex:1; height:58px; background:var(--bg); border:1px solid var(--border);
-  border-radius:4px; color:var(--green); font-family:'Share Tech Mono',monospace;
-  font-size:30px; padding:0 14px; outline:none; -webkit-appearance:none;
-  letter-spacing:2px;
-}
-input.num:focus { border-color:var(--green); }
-input.num::placeholder { color:var(--muted); font-size:16px; }
-
-/* STATUS */
-.status { padding:10px 20px; font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--muted); min-height:36px; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); }
-.dot { width:7px; height:7px; border-radius:50%; background:var(--muted); flex-shrink:0; animation:blink 1.5s ease-in-out infinite; }
-.dot.on { background:var(--green); }
-.dot.err { background:var(--red); animation:none; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-/* CARDS */
-.cards { flex:1; padding:20px; display:flex; flex-direction:column; gap:14px; }
-.card { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:18px 20px; display:flex; flex-direction:column; gap:6px; }
-.card.ok { border-color:var(--green); }
-.card.am { border-color:var(--amber); }
-.clbl { font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
-.cval { font-family:'Share Tech Mono',monospace; font-size:42px; line-height:1; color:var(--text); }
-.cval.g { color:var(--green); }
-.cval.a { color:var(--amber); }
-.csub { font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--muted); }
-.pair { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-.pair .cval { font-size:28px; }
-
-/* HISTORIAL */
-.hist-wrap { padding:0 20px 30px; }
-.hist-head { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:2px; margin-bottom:10px; display:flex; justify-content:space-between; }
-.hist-head button { background:none; border:none; color:var(--muted); font-family:'Share Tech Mono',monospace; font-size:11px; cursor:pointer; text-decoration:underline; }
-.hist-list { display:flex; flex-direction:column; gap:6px; }
-.hist-item { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:var(--surface); border:1px solid var(--border); border-radius:4px; font-family:'Share Tech Mono',monospace; font-size:13px; }
-.hist-item .c { color:var(--muted); }
-.hist-item .ar { color:var(--border); }
-.hist-item .s { color:var(--green); }
-.hist-item .p { color:var(--amber); font-size:11px; }
-.empty { font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--muted); text-align:center; padding:20px; opacity:.5; }
-
-canvas { display:none; }
+:root{--green:#00ff88;--green-dim:#00cc66;--bg:#0a0e0d;--surface:#111815;--border:#1e2e25;--text:#d4ede2;--muted:#4a6b58;--red:#ff4466;--amber:#ffcc00}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;min-height:100dvh;display:flex;flex-direction:column}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 10px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:10}
+.logo{font-family:'Share Tech Mono',monospace;font-size:18px;color:var(--green);letter-spacing:2px}
+.logo span{color:var(--muted)}
+.badge{font-family:'Share Tech Mono',monospace;font-size:11px;background:var(--green);color:var(--bg);padding:3px 8px;border-radius:2px}
+.preview-wrap{width:100%;background:#050807;min-height:160px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+#previewImg{width:100%;max-height:240px;object-fit:contain;display:none}
+.placeholder{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:12px;padding:24px;text-align:center}
+.placeholder .icon{font-size:40px}
+.photo-wrap{padding:14px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+label.btn-foto{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:58px;background:var(--green);border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;letter-spacing:2px;color:var(--bg);text-transform:uppercase;-webkit-user-select:none;user-select:none}
+label.btn-foto:active{background:var(--green-dim)}
+label.btn-foto input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.manual-wrap{padding:16px 20px;background:var(--surface);border-bottom:1px solid var(--border)}
+.lbl{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:8px;display:block}
+input.num{width:100%;height:58px;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--green);font-family:'Share Tech Mono',monospace;font-size:30px;padding:0 14px;outline:none;-webkit-appearance:none;letter-spacing:2px}
+input.num:focus{border-color:var(--green)}
+input.num::placeholder{color:var(--muted);font-size:16px}
+.status{padding:10px 20px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);min-height:36px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;animation:blink 1.5s ease-in-out infinite}
+.dot.on{background:var(--green)}
+.dot.err{background:var(--red);animation:none}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.cards{flex:1;padding:20px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+.card.ok{border-color:var(--green)}
+.card.am{border-color:var(--amber)}
+.clbl{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
+.cval{font-family:'Share Tech Mono',monospace;font-size:42px;line-height:1;color:var(--text)}
+.cval.g{color:var(--green)}
+.cval.a{color:var(--amber)}
+.csub{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pair .cval{font-size:28px}
+.hist-wrap{padding:0 20px 30px}
+.hist-head{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:10px;display:flex;justify-content:space-between}
+.hist-head button{background:none;border:none;color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:11px;cursor:pointer;text-decoration:underline}
+.hist-list{display:flex;flex-direction:column;gap:6px}
+.hist-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:4px;font-family:'Share Tech Mono',monospace;font-size:13px}
+.hist-item .c{color:var(--muted)}
+.hist-item .ar{color:var(--border)}
+.hist-item .s{color:var(--green)}
+.hist-item .p{color:var(--amber);font-size:11px}
+.empty{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--muted);text-align:center;padding:20px;opacity:.5}
 </style>
 </head>
 <body>
-
 <header>
   <div class="logo">PRECIO<span>SCAN</span></div>
   <div class="badge">+45%</div>
 </header>
-
-<!-- PREVIEW -->
 <div class="preview-wrap">
   <img id="previewImg" alt="preview"/>
   <div class="placeholder" id="ph">
-    <div class="icon">ð·</div>
-    <span>SACÃ FOTO A LA PISTOLA DE PRECIOS</span>
+    <div class="icon">📷</div>
+    <span>SACÁ FOTO A LA PISTOLA DE PRECIOS</span>
   </div>
 </div>
-
-<!-- BOTÃN FOTO â el label envuelve el input, iOS lo activa directo -->
 <div class="photo-wrap">
   <label class="btn-foto">
-    ð· SACAR FOTO
+    📷 SACAR FOTO
     <input type="file" accept="image/*" capture="environment" id="fileInput"/>
   </label>
 </div>
-
-<!-- INGRESO MANUAL -->
 <div class="manual-wrap">
-  <span class="lbl">// INGRESO MANUAL (coma o punto)</span>
-  <div class="row">
-    <input class="num" id="numInput" type="text" inputmode="decimal" placeholder="ej: 1,89"/>
-  </div>
+  <span class="lbl">// INGRESO MANUAL</span>
+  <input class="num" id="numInput" type="text" inputmode="decimal" placeholder="ej: 1,89"/>
 </div>
-
-<!-- STATUS -->
 <div class="status">
   <div class="dot" id="dot"></div>
   <span id="msg">Listo</span>
 </div>
-
-<!-- RESULTADOS -->
 <div class="cards">
   <div class="card" id="cMain">
     <span class="clbl">// PRECIO DE VENTA SUGERIDO</span>
-    <span class="cval" id="vMain">â</span>
-    <span class="csub" id="sMain">SacÃ¡ una foto o escribÃ­ el costo</span>
+    <span class="cval" id="vMain">—</span>
+    <span class="csub" id="sMain">Sacá una foto o escribí el costo</span>
   </div>
   <div class="pair">
-    <div class="card"><span class="clbl">// COSTO</span><span class="cval" id="vCost">â</span></div>
-    <div class="card"><span class="clbl">// GANANCIA</span><span class="cval" id="vGain">â</span></div>
+    <div class="card"><span class="clbl">// COSTO</span><span class="cval" id="vCost">—</span></div>
+    <div class="card"><span class="clbl">// GANANCIA</span><span class="cval" id="vGain">—</span></div>
   </div>
   <div class="card" id="cPsych">
-    <span class="clbl">// PRECIO PSICOLÃGICO (.99)</span>
-    <span class="cval a" id="vPsych">â</span>
+    <span class="clbl">// PRECIO PSICOLÓGICO (.99)</span>
+    <span class="cval a" id="vPsych">—</span>
     <span class="csub" id="sPsych">Redondeado</span>
   </div>
 </div>
-
-<!-- HISTORIAL -->
 <div class="hist-wrap">
-  <div class="hist-head">
-    <span>// HISTORIAL</span>
-    <button id="btnClear">limpiar</button>
-  </div>
-  <div class="hist-list" id="histList">
-    <div class="empty">Sin escaneos todavÃ­a</div>
-  </div>
+  <div class="hist-head"><span>// HISTORIAL</span><button id="btnClear">limpiar</button></div>
+  <div class="hist-list" id="histList"><div class="empty">Sin escaneos todavía</div></div>
 </div>
-
-<canvas id="cv"></canvas>
-
 <script>
-var fileInput = document.getElementById('fileInput');
-var numInput  = document.getElementById('numInput');
-var btnClear  = document.getElementById('btnClear');
-var previewImg= document.getElementById('previewImg');
-var ph        = document.getElementById('ph');
-var dot       = document.getElementById('dot');
-var msgEl     = document.getElementById('msg');
-var histList  = document.getElementById('histList');
-var cv        = document.getElementById('cv');
-var hist      = [];
-var busy      = false;
+var fi   = document.getElementById('fileInput');
+var ni   = document.getElementById('numInput');
+var clr  = document.getElementById('btnClear');
+var prev = document.getElementById('previewImg');
+var ph   = document.getElementById('ph');
+var dot  = document.getElementById('dot');
+var msg  = document.getElementById('msg');
+var hl   = document.getElementById('histList');
+var hist = [];
+var busy = false;
 
-function setMsg(txt, type) {
-  msgEl.textContent = txt;
-  dot.className = 'dot' + (type === 'on' ? ' on' : type === 'err' ? ' err' : '');
-}
+function setMsg(t,tp){msg.textContent=t;dot.className='dot'+(tp==='on'?' on':tp==='err'?' err':'');}
 
-function showResult(cost, fromPhoto) {
-  if (isNaN(cost) || cost <= 0) return;
-  var sale  = cost * 1.45;
-  var gain  = sale - cost;
-  var psych = Math.floor(sale) + 0.99;
-
-  document.getElementById('vPsych').textContent = '$' + psych.toFixed(2);
-  document.getElementById('cPsych').className   = 'card am';
-  document.getElementById('vCost').textContent  = '$' + cost.toFixed(2);
-  document.getElementById('vGain').textContent  = '$' + gain.toFixed(2);
-  document.getElementById('vMain').textContent  = '$' + sale.toFixed(2);
-  document.getElementById('vPsych').textContent = '$' + psych.toFixed(2);
-  document.getElementById('vMain').className    = 'cval g';
-  document.getElementById('sMain').textContent  = fromPhoto ? 'Detectado por foto' : 'Ingreso manual';
-  document.getElementById('cMain').className    = 'card ok';
-
-  hist.unshift({ cost: cost, sale: sale, psych: psych });
-  if (hist.length > 10) hist.pop();
+function showResult(cost,fromPhoto){
+  if(isNaN(cost)||cost<=0)return;
+  var sale=cost*1.45,gain=sale-cost,psych=Math.floor(sale)+0.99;
+  document.getElementById('vMain').textContent='$'+sale.toFixed(2);
+  document.getElementById('vMain').className='cval g';
+  document.getElementById('sMain').textContent=fromPhoto?'Foto · 45% margen':'Manual · 45% margen';
+  document.getElementById('cMain').className='card ok';
+  document.getElementById('vCost').textContent='$'+cost.toFixed(2);
+  document.getElementById('vGain').textContent='$'+gain.toFixed(2);
+  document.getElementById('vPsych').textContent='$'+psych.toFixed(2);
+  document.getElementById('cPsych').className='card am';
+  hist.unshift({cost:cost,sale:sale,psych:psych});
+  if(hist.length>10)hist.pop();
   renderHist();
 }
 
-function renderHist() {
-  if (!hist.length) {
-    histList.innerHTML = '<div class="empty">Sin escaneos todavÃ­a</div>';
-    return;
-  }
-  histList.innerHTML = hist.map(function(h) {
-    return '<div class="hist-item">' +
-      '<span class="c">$' + h.cost.toFixed(2) + '</span>' +
-      '<span class="ar">â</span>' +
-      '<span class="s">$' + h.sale.toFixed(2) + '</span>' +
-      '<span class="p">($' + h.psych.toFixed(2) + ')</span>' +
-      '</div>';
+function renderHist(){
+  if(!hist.length){hl.innerHTML='<div class="empty">Sin escaneos todavía</div>';return;}
+  hl.innerHTML=hist.map(function(h){
+    return '<div class="hist-item"><span class="c">$'+h.cost.toFixed(2)+'</span><span class="ar">→</span><span class="s">$'+h.sale.toFixed(2)+'</span><span class="p">($'+h.psych.toFixed(2)+')</span></div>';
   }).join('');
 }
 
-/* ---- FOTO ---- */
-fileInput.addEventListener('change', function() {
-  var file = this.files[0];
-  if (!file || busy) return;
-  busy = true;
-  setMsg('Cargando foto...', 'on');
+function extractPrices(text){
+  var ms=text.match(/$?\s*(\d{1,4}[.,]\d{1,2})/g)||[];
+  return ms.map(function(m){return parseFloat(m.replace(/[^0-9.,]/g,'').replace(',','.'));})
+           .filter(function(p){return !isNaN(p)&&p>=0.05&&p<=999;});
+}
 
-  var url = URL.createObjectURL(file);
-  previewImg.src = url;
-  previewImg.style.display = 'block';
-  ph.style.display = 'none';
-
-  var img = new Image();
-  img.onload = function() {
-    cv.width  = img.naturalWidth;
-    cv.height = img.naturalHeight;
-    var ctx = cv.getContext('2d');
-
-    ctx.filter = 'contrast(2.5) brightness(1.2) saturate(0)';
-    ctx.drawImage(img, 0, 0);
-    var d1 = cv.toDataURL('image/jpeg', 0.95);
-
-    ctx.filter = 'invert(1) contrast(2.5) brightness(1.1) saturate(0)';
-    ctx.drawImage(img, 0, 0);
-    var d2 = cv.toDataURL('image/jpeg', 0.95);
-
-    var combined = '';
-
-    setMsg('OCR 1/2...', 'on');
-    Tesseract.recognize(d1, 'eng', {
-      logger: function(m) {
-        if (m.status === 'recognizing text')
-          setMsg('OCR 1: ' + Math.round(m.progress * 100) + '%', 'on');
-      }
-    }).then(function(r1) {
-      combined += ' ' + r1.data.text;
-      setMsg('OCR 2/2...', 'on');
-      return Tesseract.recognize(d2, 'eng', {
-        logger: function(m) {
-          if (m.status === 'recognizing text')
-            setMsg('OCR 2: ' + Math.round(m.progress * 100) + '%', 'on');
-        }
-      });
-    }).then(function(r2) {
-      combined += ' ' + r2.data.text;
-      setMsg('Texto: "' + combined.trim().substring(0, 60) + '"', '');
-
-      var ms = combined.match(/\$?\s*(\d{1,4}[.,]\d{1,2})/g) || [];
-      var prices = ms.map(function(m) {
-        return parseFloat(m.replace(/[^0-9.,]/g, '').replace(',', '.'));
-      }).filter(function(p) { return !isNaN(p) && p >= 0.05 && p <= 999; });
-
-      if (prices.length > 0) {
-        var cost = Math.min.apply(null, prices);
-        setMsg('Detectados: ' + prices.map(function(p){return '$'+p.toFixed(2);}).join(' | ') + ' â costo: $' + cost.toFixed(2), 'on');
-        numInput.value = cost.toFixed(2).replace('.', ',');
-        showResult(cost, true);
-      } else {
-        setMsg('No se detectÃ³ precio. IngresÃ¡ manualmente.', 'err');
-      }
-
-      URL.revokeObjectURL(url);
-      busy = false;
-      fileInput.value = '';
-    }).catch(function(e) {
-      setMsg('Error OCR. IngresÃ¡ manualmente.', 'err');
-      busy = false;
-      fileInput.value = '';
-    });
-  };
-  img.src = url;
+/* ---- FOTO: pasar File directo a Tesseract, sin canvas ---- */
+fi.addEventListener('change',function(){
+  var file=this.files[0];
+  if(!file||busy)return;
+  busy=true;
+  
+  // Mostrar preview
+  var url=URL.createObjectURL(file);
+  prev.src=url;
+  prev.style.display='block';
+  ph.style.display='none';
+  
+  setMsg('Escaneando foto...','on');
+  
+  // Pasar el File directamente a Tesseract — sin canvas, sin conversión
+  Tesseract.recognize(file,'eng',{
+    logger:function(m){
+      if(m.status==='recognizing text')
+        setMsg('OCR: '+Math.round(m.progress*100)+'%','on');
+    }
+  }).then(function(r){
+    var txt=r.data.text;
+    setMsg('Texto: "'+txt.trim().substring(0,50)+'"','');
+    var prices=extractPrices(txt);
+    if(prices.length>0){
+      var cost=Math.min.apply(null,prices);
+      setMsg('Detectado: '+prices.map(function(p){return '$'+p.toFixed(2);}).join(' | ')+' → $'+cost.toFixed(2),'on');
+      ni.value=cost.toFixed(2).replace('.',',');
+      showResult(cost,true);
+    }else{
+      setMsg('No se detectó precio. Ingresá manualmente.','err');
+    }
+    URL.revokeObjectURL(url);
+    busy=false;
+    fi.value='';
+  }).catch(function(e){
+    setMsg('Error: '+e.message,'err');
+    busy=false;
+    fi.value='';
+  });
 });
 
-/* ---- MANUAL: tiempo real ---- */
-numInput.addEventListener('input', function() {
-  var v = parseFloat(this.value.replace(',', '.').trim());
-  if (!isNaN(v) && v > 0) {
-    showResult(v, false);
-    setMsg('$' + v.toFixed(2) + ' + 45%', 'on');
-  }
+/* ---- MANUAL ---- */
+ni.addEventListener('input',function(){
+  var v=parseFloat(this.value.replace(',','.').trim());
+  if(!isNaN(v)&&v>0){showResult(v,false);setMsg('$'+v.toFixed(2)+' + 45%','on');}
 });
-
-numInput.addEventListener('click', function() {
-  if (this.value.trim() !== '') this.select();
-});
-
-btnClear.addEventListener('click', function() {
-  hist = [];
-  renderHist();
-});
+ni.addEventListener('click',function(){if(this.value.trim()!=='')this.select();});
+clr.addEventListener('click',function(){hist=[];renderHist();});
 </script>
 </body>
 </html>
